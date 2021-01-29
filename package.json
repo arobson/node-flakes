@@ -1,6 +1,6 @@
 {
   "name": "node-flakes",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "128-bit, k-ordered, lexicographically sortable, base 62, coordination free id generation for Node that stay crunchy in milk",
   "main": "src/index.js",
   "scripts": {
