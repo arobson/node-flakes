@@ -15,10 +15,10 @@ let instanceCount = 0;
 // via http://stackoverflow.com/questions/8482309/converting-javascript-integer-to-byte-array-and-back
 function longToBytes (long) {
   // we want to represent the input as a 8-bytes array
-  var byteArray = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-  for (var index = 0; index < byteArray.length; index++) {
-    var byte = long & 0xff;
-    byteArray[ index ] = byte;
+  const byteArray = [0, 0, 0, 0, 0, 0, 0, 0];
+  for (let index = 0; index < byteArray.length; index++) {
+    const byte = long & 0xff;
+    byteArray[index] = byte;
     long = ((long - byte) / 256);
   }
   return byteArray.reverse();
@@ -27,11 +27,10 @@ function longToBytes (long) {
 async function getWorkerIdFromEnvironment () {
   return new Promise(resolve => {
     getMac((err, address) => {
-      let bytes;
       if (err) {
         address = os.hostname();
       }
-      bytes = getNodeBytesFromSeed(address);
+      const bytes = getNodeBytesFromSeed(address);
       resolve(bytes);
     });
   });
@@ -45,7 +44,7 @@ function getNodeBytesFromSeed (seed) {
 const Flake = function (seed) {
   this.lastMs = Date.now();
   this.msCounter = 0;
-  this.msBytes = [ 0, 0 ];
+  this.msBytes = [0, 0];
   this.index = ++instanceCount;
   this.seed = seed;
 };
@@ -68,12 +67,12 @@ Flake.prototype.updateTime = function () {
   } else if (now > this.lastMs) {
     change = true;
     this.msCounter = 0;
-    this.msBytes = [ 0, 0 ];
+    this.msBytes = [0, 0];
     this.lastMs = now;
     this.timestamp = longToBytes(now);
   } else {
     this.msCounter++;
-    this.msBytes = [ 0, 0 ].concat(longToBytes(this.msCounter)).splice(-2, 2);
+    this.msBytes = [0, 0].concat(longToBytes(this.msCounter)).splice(-2, 2);
   }
   return change;
 };

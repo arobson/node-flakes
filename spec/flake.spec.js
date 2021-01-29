@@ -4,7 +4,7 @@ const path = require('path');
 const _ = require('lodash');
 
 describe('when starting up without a seed', function () {
-  var flake;
+  let flake;
   before(async function () {
     flake = await require('../src/index.js')();
     return flake.seedFromEnvironment();
@@ -29,7 +29,7 @@ describe('when starting up without a seed', function () {
   });
 
   describe('when getting an id', function () {
-    var id;
+    let id;
     before(function () {
       id = flake.create();
     });
@@ -41,8 +41,8 @@ describe('when starting up without a seed', function () {
 
   describe('when getting 10,000 ids', function () {
     let diff;
-    let list = [];
-    let idCount = 10000;
+    const list = [];
+    const idCount = 10000;
     this.timeout(10000);
     before(function () {
       const start = process.hrtime();
@@ -50,7 +50,7 @@ describe('when starting up without a seed', function () {
         list.push(flake.create());
         if (list.length === idCount) {
           diff = process.hrtime(start);
-          diff = (diff[ 0 ] * 1e9 + diff[ 1 ]) / 1000000;
+          diff = (diff[0] * 1e9 + diff[1]) / 1000000;
         }
       }
     });
@@ -70,8 +70,8 @@ describe('when starting up without a seed', function () {
 describe('when starting with a seed', function () {
   let flake;
   before(function () {
-    let flakePath = path.resolve('./src/index.js');
-    delete require.cache[ flakePath ];
+    const flakePath = path.resolve('./src/index.js');
+    delete require.cache[flakePath];
     flake = require('../src/index.js')('burple');
   });
 
