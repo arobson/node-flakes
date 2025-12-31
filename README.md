@@ -25,37 +25,64 @@ The Node identity lib that provides:
 
 The sequence number increments for each subsequent id requested within the same millisecond.
 
+## Requirements
+
+- Node.js 18 or newer
+
 ## API
 
-### `require('node-flakes')`
+### `getBase62Provider()`
 
-Requiring `node-flakes` returns a function. Even when required and executed multiple times the same instance gets returned. This is worth noting so that you don't have to go through extra effort to pass around the seed value or continue to re-initialize it every time.
-
-### Using MACAddress or HostName as seed
-
-If no seed is provided, you can use `seedFromEnvironment` to use either the MAC address or host name plus the process id as the seed. This may not prevent duplicate seeds or id collisions, because of scenario where duplicate MACs or host names in your environment can occur.
+Returns a function that creates base62 ids that sort lexicographically by time.
 
 ```javascript
-const flakes = require('node-flakes')();
-flakes.seedFromEnvironment() // this call returns a promise and can be awaited if in an async call
-  .then(
-    () => {
-      const id = flakes.create(); // ta-da
-    }
-  );
+const { getBase62Provider } = require('node-flakes');
+
+const nextId = getBase62Provider();
+const id = nextId();
 ```
 
-### Unique seeds
+```typescript
+import { getBase62Provider } from 'node-flakes';
 
-Anything can seed the node id. node-flakes uses farmhash to create a unique 32 bit integer from whatever you have lying around. This needs to be unique for every instance creating ids.
+const nextId = getBase62Provider();
+const id = nextId();
+```
+
+### `getBigIntIdProvider()`
+
+Returns a function that creates bigint ids ordered by time.
 
 ```javascript
-const flakes = require('node-flakes')('Hey, look, a (terrible) string based seed.');
-const id = flakes.create(); // ta-da
+const { getBigIntIdProvider } = require('node-flakes');
+
+const nextId = getBigIntIdProvider();
+const id = nextId();
+```
+
+### `getBigIntIdProviderFromMac(macNumber: bigint)`
+
+Uses a provided 48-bit node id (MAC address) to seed the generator.
+
+```javascript
+const { getBigIntIdProviderFromMac } = require('node-flakes');
+
+const nextId = getBigIntIdProviderFromMac(0x112233445566n);
+const id = nextId();
+```
+
+### `bigIntTo62(num: bigint)`
+
+Converts a bigint into a 22-character base62 id that preserves lexicographic order.
+
+```javascript
+const { bigIntTo62 } = require('node-flakes');
+
+const id = bigIntTo62(123456789n);
 ```
 
 ### Speed
-Looks like this tops out around 20 / ms on modern processors. Do with that what you will :)
+Looks like this tops out around 500 / ms on comodity processors. Do with that what you will :)
 
 [travis-image]: https://travis-ci.org/arobson/node-flakes.svg?branch=master
 [travis-url]: https://travis-ci.org/arobson/node-flakes

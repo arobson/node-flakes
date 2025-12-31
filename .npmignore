@@ -4,4 +4,7 @@ node_modules/
 log/
 spec/
 coverage/
-.nyc_output/
+.editorconfig
+AGENTS.md
+.gitignore
+Makefile

@@ -1,15 +1,31 @@
 {
   "name": "node-flakes",
-  "version": "1.1.0",
-  "description": "128-bit, k-ordered, lexicographically sortable, base 62, coordination free id generation for Node that stay crunchy in milk",
-  "main": "src/index.js",
+  "version": "2.0.0",
+  "description": "128-bit, k-ordered, lexicographically sortable, base 62, coordination-free id generation for Node that stays crunchy in milk",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "lint": "semistandard",
-    "lint-fix": "semistandard --fix",
-    "pretest": "semistandard",
-    "test": "./node_modules/mocha/bin/mocha spec/**/*.spec.js",
-    "coverage": "nyc npm test",
-    "release": "standard-version"
+    "build": "tsc -p tsconfig.json",
+    "lint": "semistandard src/* --ext .js,.ts",
+    "lint-fix": "semistandard src/* --fix --ext .js,.ts",
+    "pretest": "npm run lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "release": "standard-version",
+    "prepublishOnly": "npm run build"
   },
   "author": "Alex Robson",
   "publishConfig": {
@@ -26,29 +42,63 @@
     "128 bit",
     "flake"
   ],
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "coveralls": "^3.1.0",
-    "fauxdash": "^1.7.0",
-    "mocha": "^8.2.1",
-    "mocha-lcov-reporter": "^1.3.0",
-    "nyc": "^15.1.0",
-    "semistandard": "^16.0.0",
-    "standard-version": "^9.1.0"
+    "@types/node": "^18.19.0",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "semistandard": "^17.0.0",
+    "standard-version": "^9.1.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
   },
   "dependencies": {
-    "basejump": "^1.1.0",
-    "farmhash": "^3.2.0",
-    "getmac": "^1.4.6"
+    "farmhash": "^5.0.1",
+    "getmac": "^6.6.0"
   },
   "semistandard": {
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": 2020,
+      "sourceType": "module",
+      "project": "./tsconfig.json"
+    },
+    "plugins": [
+      "@typescript-eslint"
+    ],
     "env": [
-      "mocha"
+      "node",
+      "es2020"
     ],
     "globals": [
-      "should",
+      "_",
+      "afterEach",
+      "beforeEach",
+      "describe",
       "expect",
-      "_"
+      "it",
+      "vi"
+    ],
+    "ignore": [
+      "dist/**",
+      "node_modules/**"
     ]
+  },
+  "vitest": {
+    "coverage": {
+      "provider": "v8",
+      "reporter": [
+        "text",
+        "lcov"
+      ],
+      "reportsDirectory": "coverage",
+      "exclude": [
+        "dist/**",
+        "node_modules/**"
+      ]
+    }
   }
 }

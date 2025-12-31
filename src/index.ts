@@ -1,0 +1,101 @@
+// * Note: This implementation is based on the 128-bit flake id algorithm
+// * developed by Boundary (github.com/boundary/flake) and implementations
+// * I've written in other languages.
+// * IMPORTANT: This implementation will require a custom epoch offset
+// * in order to avoid the 2038 problem. The epoch offset *cannot* be
+// * changed after the first id is generated in a given database.
+
+import getMac from 'getmac';
+import farmhash from 'farmhash';
+
+const EPOCH = 1577862000000n; // 2020-01-01T00:00:00.000Z
+
+// Returns a function that is guaranteed to return a unique bigint
+// that will be k-ordered (time ordered) when compared to other ids
+export function getBigIntIdProvider (nodeIdentifier?: string): () => bigint {
+  const nodeId = nodeIdentifier ? getNodeIdentifierAsBigInt(nodeIdentifier) : getMacAddressAsBigInt();
+  return getBigIntIdProviderWithNodeId(nodeId);
+}
+
+// Returns a function that is guaranteed to return a unique base62 string
+// that will lexicographically sort in k-order (time ordered) when compared to other ids
+// nodeIdentifier is an optional arbitrary string that is hashed to create the node id portion
+// if not provided, the host mac address will be used
+export function getBase62Provider (nodeIdentifier?: string): () => string {
+  const idProvider = getBigIntIdProvider(nodeIdentifier);
+  return () => bigIntTo62(idProvider());
+}
+
+// Returns a function that is guaranteed to return a unique base36 string
+// that will lexicographically sort in k-order (time ordered) when compared to other ids
+export function getBase36Provider (nodeIdentifier: string): () => string {
+  const idProvider = getBigIntIdProvider(nodeIdentifier);
+  return () => bigIntTo36(idProvider());
+}
+
+// Creates a unique bigint id that is k-ordered (time ordered) when compared to other ids
+export function getBigIntIdProviderWithNodeId (nodeIdentifier: bigint): () => bigint {
+  let lastTime = 0n;
+  let iteration = 0n;
+  return () => {
+    const now = BigInt(Date.now()) - EPOCH;
+    if (now === lastTime) {
+      iteration++;
+      if (iteration > 0xFFFFn) {
+        throw new Error('Too many iterations in the same millisecond');
+      }
+    } else if (now < lastTime) {
+      throw new Error('NTP clock skew detected');
+    } else {
+      lastTime = now;
+      iteration = 0n;
+    }
+    return (lastTime << 64n) + (nodeIdentifier << 16n) + iteration;
+  };
+}
+
+// Converts a bigint to a base62 string that will sort lexicographically
+const BASE62_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+export function bigIntTo62 (num: bigint): string {
+  let result = '';
+  while (num > 0n) {
+    result = `${BASE62_ALPHABET[Number(num % 62n)]}${result}`;
+    num = num / 62n;
+  }
+  const len = 22 - result.length;
+  for (let i = 0; i < len; i++) {
+    result = `0${result}`;
+  }
+  return result;
+}
+
+// converts a bigint to a base36 string that will sort lexicographically
+const BASE36_ALPHABET = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+export function bigIntTo36 (num: bigint): string {
+  let result = '';
+  while (num > 0n) {
+    result = `${BASE36_ALPHABET[Number(num % 36n)]}${result}`;
+    num = num / 36n;
+  }
+  const len = 25 - result.length;
+  for (let i = 0; i < len; i++) {
+    result = `0${result}`;
+  }
+  return result;
+}
+
+// Converts the host's mac address to a big int for use in the 48 bit
+// node id portion of the flake id
+function getMacAddressAsBigInt (): bigint {
+  return getMac()
+    .split(':')
+    .reduce((acc, octet, i) => {
+      return acc + (BigInt(`0x${octet}`) << BigInt(i * 8));
+    }, 0n);
+}
+
+// Take an arbitrary node identifier as a string, use farmhash to hash it to
+// a 48 bit number for use in the node id portion of the flake id
+function getNodeIdentifierAsBigInt (identifier: string): bigint {
+  return BigInt(farmhash.hash32(identifier) & 0x0000FFFFFFFFFFFF);
+}
