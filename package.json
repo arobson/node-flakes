@@ -1,6 +1,6 @@
 {
   "name": "node-flakes",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "128-bit, k-ordered, lexicographically sortable, base 62, coordination-free id generation for Node that stays crunchy in milk",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
